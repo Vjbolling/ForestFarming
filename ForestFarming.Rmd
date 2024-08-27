@@ -9,22 +9,51 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r library}
+```{r read excel, echo = FALSE}
+library(readxl)
+Summer_24 <- read_excel("~/Downloads/Summer'24.xlsx")
+```
+
+
+```{r library, echo = FALSE}
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-```
-```{r view}
-view(Summer_24)
+library(tidymodels)
+library(scatterplot3d)
 ```
 
 ```{r summary}
-Summer_24 %>% 
+summary_stats_D <- Summer_24 %>% 
   group_by(D) %>% 
   summarize(mean_moisture = mean(soil_moisture), 
             median_moisture = median(soil_moisture),
-            sd_moisture = sd(soil_moisture))
+            sd_moisture = sd(soil_moisture),
+            min_soil_moisture = min(soil_moisture, na.rm = TRUE),
+    max_soil_moisture = max(soil_moisture, na.rm = TRUE))
 
+
+summary_stats_microclimate <- Summer_24 %>% 
+  group_by(microclimate_id) %>% 
+  summarize(mean_moisture = mean(soil_moisture), 
+            median_moisture = median(soil_moisture),
+            sd_moisture = sd(soil_moisture),
+            min_soil_moisture = min(soil_moisture, na.rm = TRUE),
+    max_soil_moisture = max(soil_moisture, na.rm = TRUE))
+
+
+summary_stats_p <- Summer_24 %>% 
+  group_by(P) %>% ##p represents the treatment of each subplot
+  summarize(mean_moisture = mean(soil_moisture), 
+            median_moisture = median(soil_moisture),
+            sd_moisture = sd(soil_moisture),
+            min_soil_moisture = min(soil_moisture, na.rm = TRUE),
+    max_soil_moisture = max(soil_moisture, na.rm = TRUE))
+
+
+```
+
+```{r boxplots}
 ggplot(Summer_24, aes(x = factor(D), y = soil_moisture)) +
   geom_boxplot() +
   labs(x = "D Value", y = "Soil Moisture") +
@@ -32,10 +61,13 @@ ggplot(Summer_24, aes(x = factor(D), y = soil_moisture)) +
 
 ggplot(Summer_24, aes(x = factor(microclimate_id), y = soil_moisture)) +
   geom_boxplot() +
-  labs(x = "D Value", y = "Soil Moisture") +
+  labs(x = "Microclimate", y = "Soil Moisture") +
+  theme_minimal()
+
+ggplot(Summer_24, aes(x = factor(P), y = soil_moisture)) +
+  geom_boxplot() +
+  labs(x = "Treatment Type", y = "Soil Moisture") +
   theme_minimal()
 ```
-```{r }
 
-```
 
