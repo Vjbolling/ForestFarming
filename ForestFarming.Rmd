@@ -69,5 +69,27 @@ ggplot(Summer_24, aes(x = factor(P), y = soil_moisture)) +
   labs(x = "Treatment Type", y = "Soil Moisture") +
   theme_minimal()
 ```
+```{r scatter}
+Summer_24 %>%
+  filter(!is.na(light_conditions)) %>%
+ggplot(aes(x = light_conditions, y = soil_moisture)) +
+  geom_point() +
+  labs(x = "Light Conditions", y = "Moisture") +
+  theme_minimal()
+
+Summer_24 %>%
+  filter(!is.na(light_conditions), light_conditions < 500) %>%
+ggplot(aes(x = light_conditions, y = soil_moisture)) +
+  geom_point() +
+  labs(x = "Light Conditions", y = "Moisture") +
+  theme_minimal()
+
+Summer_24 %>%
+  filter(!is.na(light_conditions), light_conditions > 1200) %>%
+ggplot(aes(x = light_conditions, y = soil_moisture)) +
+  geom_point() +
+  labs(x = "Light Conditions", y = "Moisture") +
+  theme_minimal()
+```
 
 
