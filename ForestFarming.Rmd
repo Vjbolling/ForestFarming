@@ -1,0 +1,41 @@
+---
+title: "InitialStats"
+author: "VB"
+date: "2024-08-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
+```{r view}
+view(Summer_24)
+```
+
+```{r summary}
+Summer_24 %>% 
+  group_by(D) %>% 
+  summarize(mean_moisture = mean(soil_moisture), 
+            median_moisture = median(soil_moisture),
+            sd_moisture = sd(soil_moisture))
+
+ggplot(Summer_24, aes(x = factor(D), y = soil_moisture)) +
+  geom_boxplot() +
+  labs(x = "D Value", y = "Soil Moisture") +
+  theme_minimal()
+
+ggplot(Summer_24, aes(x = factor(microclimate_id), y = soil_moisture)) +
+  geom_boxplot() +
+  labs(x = "D Value", y = "Soil Moisture") +
+  theme_minimal()
+```
+```{r }
+
+```
+
