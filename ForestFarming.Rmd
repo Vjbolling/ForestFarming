@@ -12,6 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r read excel, echo = FALSE}
 library(readxl)
 Summer_24 <- read_excel("~/Downloads/Summer'24.xlsx")
+characteristics_for_growth <- read_excel("~/Downloads/characteristics for growth.xlsx", 
+    sheet = "Characteristics&Growth for R")
+mortality <- read_excel("~/Downloads/characteristics for growth.xlsx", 
+    sheet = "Mortality")
 ```
 
 
@@ -91,5 +95,34 @@ ggplot(aes(x = light_conditions, y = soil_moisture)) +
   labs(x = "Light Conditions", y = "Moisture") +
   theme_minimal()
 ```
+```{r mortality summary, echo = FALSE}
 
+#dead_NW <- sum(mortality$NW == 0)
+#dead_NE <- sum(mortality$NE == 0)
+#dead_SW <- sum(mortality$SW == 0)
+#dead_SE <- sum(mortality$SE == 0)
+
+
+#live_NW <- sum(mortality$NW == 1)
+#live_NE <- sum(mortality$NE == 1)
+#live_SW <- sum(mortality$SW == 1)
+#live_SE <- sum(mortality$SE == 1)
+
+```
+
+```{r}
+
+dead <- sapply(mortality, function(x) sum(x == 0))
+alive <- sapply(mortality, function(x) sum(x == 1))
+
+result_table <- data.frame(
+  Variable = names(mortality),
+  dead = count_zeros,
+  alive = count_ones)
+
+mortality_relevant <- result_table[-c(1, 2, 3, 4, 5, 10), ]
+
+mortality_relevant %>%
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+```
 
