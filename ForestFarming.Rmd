@@ -11,10 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r read excel, echo = FALSE}
 library(readxl)
-Summer_24 <- read_excel("~/Downloads/Summer'24.xlsx")
-characteristics_for_growth <- read_excel("~/Downloads/characteristics for growth.xlsx", 
+Summer_24 <- read_excel("~/Downloads/Summer'24 (1).xlsx", 
+    sheet = "Light&Soil")
+characteristics <- read_excel("~/Downloads/Summer'24 (1).xlsx", 
     sheet = "Characteristics&Growth for R")
-mortality <- read_excel("~/Downloads/characteristics for growth.xlsx", 
+mortality <- read_excel("~/Downloads/Summer'24 (1).xlsx", 
     sheet = "Mortality")
 ```
 
@@ -74,6 +75,9 @@ ggplot(Summer_24, aes(x = factor(P), y = soil_moisture)) +
   theme_minimal()
 ```
 ```{r scatter}
+
+##this means absolutely nothing until we have more light data and 
+##even then may not be useful for our purposes 
 Summer_24 %>%
   filter(!is.na(light_conditions)) %>%
 ggplot(aes(x = light_conditions, y = soil_moisture)) +
@@ -81,19 +85,19 @@ ggplot(aes(x = light_conditions, y = soil_moisture)) +
   labs(x = "Light Conditions", y = "Moisture") +
   theme_minimal()
 
-Summer_24 %>%
-  filter(!is.na(light_conditions), light_conditions < 500) %>%
-ggplot(aes(x = light_conditions, y = soil_moisture)) +
-  geom_point() +
-  labs(x = "Light Conditions", y = "Moisture") +
-  theme_minimal()
+#Summer_24 %>%
+#  filter(!is.na(light_conditions), light_conditions < 500) %>%
+#ggplot(aes(x = light_conditions, y = soil_moisture)) +
+#  geom_point() +
+#  labs(x = "Light Conditions", y = "Moisture") +
+#  theme_minimal()
 
-Summer_24 %>%
-  filter(!is.na(light_conditions), light_conditions > 1200) %>%
-ggplot(aes(x = light_conditions, y = soil_moisture)) +
-  geom_point() +
-  labs(x = "Light Conditions", y = "Moisture") +
-  theme_minimal()
+#Summer_24 %>%
+#  filter(!is.na(light_conditions), light_conditions > 1200) %>%
+#ggplot(aes(x = light_conditions, y = soil_moisture)) +
+#  geom_point() +
+ # labs(x = "Light Conditions", y = "Moisture") +
+ # theme_minimal()
 ```
 ```{r mortality summary, echo = FALSE}
 
@@ -124,5 +128,15 @@ mortality_relevant <- result_table[-c(1, 2, 3, 4, 5, 10), ]
 
 mortality_relevant %>%
   bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+```
+```{r plants with herbivory}
+characteristics %>%
+  filter(herbivory_yn == "Y") %>%
+  nrow()
+  
+```
+```{r join}
+combined_characteristics_loc <- full_join(characteristics, Summer_24, 
+                                          by = "plot")
 ```
 
