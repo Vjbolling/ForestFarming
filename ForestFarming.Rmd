@@ -209,3 +209,29 @@ FULL <- FULL %>%
     treatment == 12 & (direction == "NW") ~ "strawberry"))
 ```
 
+```{r mortality by plant}
+FULL %>%
+  group_by(plant) %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+mortality_by_plant <- FULL %>%
+  group_by(plant, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+#mortality_by_plant$plant <- factor(mortality_by_plant$plant, levels = 1:12)
+
+ggplot(mortality_by_plant, 
+       aes(x = plant, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Treatment ID", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Treatment Type")
+```
+
