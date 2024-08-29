@@ -30,7 +30,7 @@ library(scatterplot3d)
 library(wesanderson)
 ```
 
-```{r summary}
+```{r summary, echo = FALSE}
 Summer_24 %>% 
   group_by(D) %>% 
   summarize(mean_moisture = mean(soil_moisture), 
@@ -63,6 +63,12 @@ ggplot(Summer_24, aes(x = factor(microclimate_id), y = soil_moisture)) +
   theme_minimal()
 
 ```
+North Forest: D1-D6
+Northern Edge: D7
+Clear Cut: D8-D12
+Southern Edge: D13
+South Forest: D14-D18
+
 ```{r scatter, echo = FALSE}
 
 ##this means absolutely nothing until we have more light data and 
@@ -143,10 +149,18 @@ ggplot(mortality_plot_data,
   ggtitle("Plant Mortality by Microclimate")
 ```
 ```{r mortality by treatment}
-treatment_mortality <- full_join(plants_long, randomized_planting, 
+FULL <- full_join(plants_long, randomized_planting, 
                                  by = "plot")
 
-mortality_by_treatment <- treatment_mortality %>%
+FULL %>%
+  group_by(treatment) %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+mortality_by_treatment <- FULL %>%
   group_by(treatment, mortality) %>%
   summarise(count = n()) %>%
   ungroup()
@@ -161,5 +175,37 @@ ggplot(mortality_by_treatment,
                     labels = c("Dead", "Live")) +
   theme_minimal() +
   ggtitle("Plant Mortality by Treatment Type")
+```
+```{r mutate}
+FULL <- FULL %>%
+  mutate(plant = case_when(
+    treatment == 1 ~ "goldenseal",
+    treatment == 2 ~ "ginseng",
+    treatment == 3 & (direction == "NE" | direction == "SW") ~ "goldenseal",
+    treatment == 3 & (direction == "NW" | direction == "SE") ~ "ginseng",
+    treatment == 4 & (direction == "NE" | direction == "SW") ~ "goldenseal",
+    treatment == 4 & (direction == "NW" | direction == "SE") ~ "strawberry",
+    treatment == 5 & (direction == "NE" | direction == "SW") ~ "ginseng",
+    treatment == 5 & (direction == "NW" | direction == "SE") ~ "strawberry",
+    treatment == 6 & (direction == "NW" | direction == "SE") ~ "strawberry", 
+    treatment == 6 & (direction == "NE") ~ "goldenseal", 
+    treatment == 6 & (direction == "SW") ~ "ginseng", 
+    treatment == 7 & (direction == "NE" | direction == "SW") ~ "goldenseal", 
+    treatment == 7 & (direction == "NW" | direction == "SE") ~ "clover", 
+    treatment == 8 & (direction == "NE" | direction == "SW") ~ "ginseng", 
+    treatment == 8 & (direction == "NW" | direction == "SE") ~ "clover", 
+    treatment == 9 & (direction == "NW" | direction == "SE") ~ "ginseng", 
+    treatment == 9 & (direction =="NE") ~ "goldenseal", 
+    treatment == 9 & (direction == "SW") ~ "ginseng", 
+    treatment == 10 & (direction == "NE" | direction == "SW") ~ "goldenseal", 
+    treatment == 10 & (direction == "NW") ~ "strawberry", 
+    treatment == 10 & (direction == "SE") ~ "white clover", 
+    treatment == 11 & (direction == "NE" | direction == "SW") ~ "ginseng", 
+    treatment == 11 & (direction == "NW") ~ "strawberry", 
+    treatment == 11 & (direction == "SE") ~ "clover", 
+    treatment == 12 & (direction == "NE") ~ "ginseng", 
+    treatment == 12 & (direction == "SE") ~ "clover", 
+    treatment == 12 & (direction == "SW") ~ "goldenseal", 
+    treatment == 12 & (direction == "NW") ~ "strawberry"))
 ```
 
