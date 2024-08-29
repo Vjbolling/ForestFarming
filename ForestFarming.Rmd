@@ -26,10 +26,11 @@ library(tidyverse)
 library(dplyr)
 library(tidymodels)
 library(scatterplot3d)
+library(wesanderson)
 ```
 
 ```{r summary}
-summary_stats_D <- Summer_24 %>% 
+Summer_24 %>% 
   group_by(D) %>% 
   summarize(mean_moisture = mean(soil_moisture), 
             median_moisture = median(soil_moisture),
@@ -38,17 +39,8 @@ summary_stats_D <- Summer_24 %>%
     max_soil_moisture = max(soil_moisture, na.rm = TRUE))
 
 
-summary_stats_microclimate <- Summer_24 %>% 
+Summer_24 %>% 
   group_by(microclimate_id) %>% 
-  summarize(mean_moisture = mean(soil_moisture), 
-            median_moisture = median(soil_moisture),
-            sd_moisture = sd(soil_moisture),
-            min_soil_moisture = min(soil_moisture, na.rm = TRUE),
-    max_soil_moisture = max(soil_moisture, na.rm = TRUE))
-
-
-summary_stats_p <- Summer_24 %>% 
-  group_by(P) %>% ##p represents the treatment of each subplot
   summarize(mean_moisture = mean(soil_moisture), 
             median_moisture = median(soil_moisture),
             sd_moisture = sd(soil_moisture),
@@ -69,35 +61,18 @@ ggplot(Summer_24, aes(x = factor(microclimate_id), y = soil_moisture)) +
   labs(x = "Microclimate", y = "Soil Moisture") +
   theme_minimal()
 
-ggplot(Summer_24, aes(x = factor(P), y = soil_moisture)) +
-  geom_boxplot() +
-  labs(x = "Treatment Type", y = "Soil Moisture") +
-  theme_minimal()
 ```
-```{r scatter}
+```{r scatter, echo = FALSE}
 
 ##this means absolutely nothing until we have more light data and 
 ##even then may not be useful for our purposes 
-Summer_24 %>%
-  filter(!is.na(light_conditions)) %>%
-ggplot(aes(x = light_conditions, y = soil_moisture)) +
-  geom_point() +
-  labs(x = "Light Conditions", y = "Moisture") +
-  theme_minimal()
-
 #Summer_24 %>%
-#  filter(!is.na(light_conditions), light_conditions < 500) %>%
+ # filter(!is.na(light_conditions)) %>%
 #ggplot(aes(x = light_conditions, y = soil_moisture)) +
-#  geom_point() +
-#  labs(x = "Light Conditions", y = "Moisture") +
-#  theme_minimal()
-
-#Summer_24 %>%
-#  filter(!is.na(light_conditions), light_conditions > 1200) %>%
-#ggplot(aes(x = light_conditions, y = soil_moisture)) +
-#  geom_point() +
+ # geom_point() +
  # labs(x = "Light Conditions", y = "Moisture") +
  # theme_minimal()
+
 ```
 ```{r mortality summary, echo = FALSE}
 
@@ -114,29 +89,71 @@ ggplot(aes(x = light_conditions, y = soil_moisture)) +
 
 ```
 
-```{r}
+```{r count 1, echo = FALSE}
 
-dead <- sapply(mortality, function(x) sum(x == 0))
-alive <- sapply(mortality, function(x) sum(x == 1))
+#dead <- sapply(mortality, function(x) sum(x == 0))
+#alive <- sapply(mortality, function(x) sum(x == 1))
 
-result_table <- data.frame(
-  Variable = names(mortality),
-  dead = count_zeros,
-  alive = count_ones)
+#result_table <- data.frame(
+ # Variable = names(mortality),
+ # dead = count_zeros,
+ # alive = count_ones)
 
-mortality_relevant <- result_table[-c(1, 2, 3, 4, 5, 10), ]
+#mortality_relevant <- result_table[-c(1, 2, 3, 4, 5, 10), ]
 
-mortality_relevant %>%
-  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+#mortality_relevant %>%
+ # bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
 ```
-```{r plants with herbivory}
-characteristics %>%
-  filter(herbivory_yn == "Y") %>%
-  nrow()
-  
-```
-```{r join}
-combined_characteristics_loc <- full_join(characteristics, Summer_24, 
+
+```{r join and pivot}
+sum_24_red_for_mortality <- Summer_24 %>% slice(1:432)
+combined_characteristics_loc <- full_join(sum_24_red_for_mortality, mortality,
                                           by = "plot")
+
+plants_long <- combined_characteristics_loc %>%
+  pivot_longer(cols = c(NW, NE, SW, SE), 
+               names_to = "direction", 
+               values_to = "mortality")
+
+```
+
+```{r mortality by microclimate}
+plants_long %>%
+  group_by(microclimate_id) %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+
+mortality_plot_data <- plants_long %>%
+  group_by(microclimate_id, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+ggplot(mortality_plot_data, 
+       aes(x = microclimate_id, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Microclimate", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Microclimate")
+```
+```{r mortality by treatment}
+mortality_treatment_data <- plants_long %>%
+  group_by(P, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+ggplot(mortality_treatment_data, 
+       aes(x = P, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Treatment ID", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Treatment Type")
 ```
 
