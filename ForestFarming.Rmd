@@ -1,8 +1,11 @@
 ---
-title: "InitialStats"
+title: "Initial Forest Farming Stats"
 author: "VB"
 date: "2024-08-27"
-output: html_document
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -50,7 +53,7 @@ Summer_24 %>%
 
 
 ```
-
+## Soil Moisture Boxplots
 ```{r boxplots}
 ggplot(Summer_24, aes(x = factor(D), y = soil_moisture)) +
   geom_boxplot() +
@@ -124,6 +127,7 @@ plants_long <- combined_characteristics_loc %>%
 
 ```
 
+## Mortality by Microclimate
 ```{r mortality by microclimate}
 plants_long %>%
   group_by(microclimate_id) %>%
@@ -148,6 +152,9 @@ ggplot(mortality_plot_data,
   theme_minimal() +
   ggtitle("Plant Mortality by Microclimate")
 ```
+
+## Mortality by Treatment Type 
+
 ```{r mortality by treatment}
 FULL <- full_join(plants_long, randomized_planting, 
                                  by = "plot")
@@ -169,7 +176,8 @@ mortality_by_treatment$treatment <- factor(mortality_by_treatment$treatment, lev
 
 ggplot(mortality_by_treatment, 
        aes(x = treatment, y = count, fill = factor(mortality))) +
-  geom_bar(position = "dodge", stat = "identity") +
+  geom_col(width=0.5,    
+           position=position_dodge(0.5)) +
   labs(x = "Treatment ID", y = "Count of Plants", fill = "Mortality Status") +
   scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
                     labels = c("Dead", "Live")) +
@@ -209,6 +217,7 @@ FULL <- FULL %>%
     treatment == 12 & (direction == "NW") ~ "strawberry"))
 ```
 
+## Mortality by Plant Species
 ```{r mortality by plant}
 FULL %>%
   group_by(plant) %>%
@@ -228,10 +237,91 @@ mortality_by_plant <- FULL %>%
 ggplot(mortality_by_plant, 
        aes(x = plant, y = count, fill = factor(mortality))) +
   geom_bar(position = "dodge", stat = "identity") +
-  labs(x = "Treatment ID", y = "Count of Plants", fill = "Mortality Status") +
+  labs(x = "Species", y = "Count of Plants", fill = "Mortality Status") +
   scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
                     labels = c("Dead", "Live")) +
   theme_minimal() +
-  ggtitle("Plant Mortality by Treatment Type")
+  ggtitle("Plant Mortality by Species")
+```
+
+```{r mortality by species in clear cut}
+FULL %>%
+  group_by(plant) %>%
+  filter(microclimate_id == "Clear Cut") %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+mortality_by_plant_cc <- FULL %>%
+  filter(microclimate_id == "Clear Cut") %>%
+  group_by(plant, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+  
+ggplot(mortality_by_plant_cc, 
+       aes(x = plant, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Species", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Species in the Clear Cut")  
+
+```
+```{r forest mortality}
+FULL %>%
+  group_by(plant) %>%
+  filter(microclimate_id == "North Forest" | 
+           microclimate_id == "South Forest") %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+mortality_by_plant_forest <- FULL %>%
+  filter(microclimate_id == "North Forest" | 
+           microclimate_id == "South Forest") %>%
+  group_by(plant, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+  
+ggplot(mortality_by_plant_forest, 
+       aes(x = plant, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Species", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Species in the forest")  
+```
+```{r edge mortality}
+FULL %>%
+  group_by(plant) %>%
+  filter(microclimate_id == "Northern Edge" | 
+           microclimate_id == "Southern Edge") %>%
+  summarise(total_plants = n(),
+            dead_plants = sum(mortality == 0),
+            live_plants = sum(mortality == 1),
+            mortality_rate = dead_plants / total_plants) %>% 
+  bind_rows(summarise_all(., ~if(is.numeric(.)) sum(.) else "Total"))
+
+mortality_by_plant_edges <- FULL %>%
+  filter(microclimate_id == "Northern Edge" | 
+           microclimate_id == "Southern Edge") %>%
+  group_by(plant, mortality) %>%
+  summarise(count = n()) %>%
+  ungroup()
+  
+ggplot(mortality_by_plant_edges, 
+       aes(x = plant, y = count, fill = factor(mortality))) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(x = "Species", y = "Count of Plants", fill = "Mortality Status") +
+  scale_fill_manual(values = c("0" = "tomato", "1" = "seagreen"), 
+                    labels = c("Dead", "Live")) +
+  theme_minimal() +
+  ggtitle("Plant Mortality by Species in Edge Microclimates")
 ```
 
